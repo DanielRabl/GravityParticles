@@ -136,7 +136,7 @@ struct points {
 
 				auto distance = (a_pos - b_pos).length();
 				auto length = a.circle.get_radius() + b.circle.get_radius();
-				if (distance < length / 2) {
+				if (distance < length / 10) {
 					if (a.mass > b.mass) {
 						a.mass += b.mass;
 						a.apply_radius();
