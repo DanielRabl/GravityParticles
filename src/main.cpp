@@ -40,53 +40,46 @@ struct point {
 	}
 
 	void consider_gravity(qpl::f64 frame_time, const std::vector<point>& others, qpl::size current_index) {
-		//constexpr qpl::f64 G = 6.67430e-11; // gravitational constant in m^3 kg^-1 s^-2
 		constexpr qpl::f64 G = 10; // gravitational constant in m^3 kg^-1 s^-2
 
 		for (qpl::size i = 0; i < others.size(); ++i) {
-			if (i == current_index) continue; // skip self
+			if (i == current_index) continue; 
 
 			const point& other = others[i];
 
-			qpl::vec2 r = other.position - this->position; // distance vector
-			qpl::f64 distance_squared = std::pow(r.length(), 2); // squared distance
+			qpl::vec2 r = other.position - this->position; 
+			qpl::f64 distance_squared = std::pow(r.length(), 2);
 
-			// Calculate force vector: F = G * (m1 * m2) / r^2
 			qpl::vec2 force = (G * this->mass * other.mass / distance_squared) * r.normalized();
 
-			// Update velocity based on the force
-			qpl::vec2 acceleration = force / this->mass; // a = F / m
+			qpl::vec2 acceleration = force / this->mass;
 			this->velocity += acceleration * frame_time;
 		}
 	}
 	void update(const qsf::event_info& event, qpl::f64 time_factor, bool add_fade_out) {
-		// Move the point according to its velocity.
 		this->position += this->velocity * event.frame_time_f() * time_factor;
 
-		// Get the screen dimensions.
 		auto dimension = event.screen_dimension();
 
 		auto margin = 300;
 		auto decrease = 0.5;
 
-		// Check if the point has gone off the screen in the x-direction.
 		if (this->position.x < -margin) {
 			this->position.x = -margin;
-			this->velocity.x *= -(1.0 - decrease); // Bounce and lose 10% speed
+			this->velocity.x *= -(1.0 - decrease);
 		}
 		else if (this->position.x > dimension.x + margin) {
 			this->position.x = dimension.x + margin;
-			this->velocity.x *= -(1.0 - decrease); // Bounce and lose 10% speed
+			this->velocity.x *= -(1.0 - decrease);
 		}
 
-		// Similarly, check if the point has gone off the screen in the y-direction.
 		if (this->position.y < -margin) {
 			this->position.y = -margin;
-			this->velocity.y *= -(1.0 - decrease); // Bounce and lose 10% speed
+			this->velocity.y *= -(1.0 - decrease);
 		}
 		else if (this->position.y > dimension.y + margin) {
 			this->position.y = dimension.y + margin;
-			this->velocity.y *= -(1.0 - decrease); // Bounce and lose 10% speed
+			this->velocity.y *= -(1.0 - decrease);
 		}
 
 		this->apply_position();
