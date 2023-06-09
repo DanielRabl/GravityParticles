@@ -8,6 +8,7 @@ struct point {
 	qsf::circle circle;
 	qpl::circular_array<qpl::vec2> fade_outs;
 	qsf::thick_lines lines;
+	qsf::sprite light_sprite;
 
 	void create(qpl::f64 mass, qpl::vec2 velocity, qpl::vec2 position) {
 		this->position = position;
@@ -16,9 +17,14 @@ struct point {
 
 		this->apply_radius();
 		this->apply_position();
-		this->circle.set_color(qpl::get_random_color().grayified(0.5));
 
-		this->fade_outs.resize(40);
+		auto color = qpl::get_random_color();
+		this->circle.set_color(color.grayified(0.5));
+
+		this->fade_outs.resize(50);
+
+		this->light_sprite.set_color(color.intensified(0.5).with_alpha(50));
+		this->light_sprite.set_texture(qsf::get_texture("light"));
 	}
 
 	void apply_radius() {
@@ -26,9 +32,11 @@ struct point {
 		this->circle.set_radius(log);
 		this->circle.set_outline_color(qpl::rgb(10, 10, 10));
 		this->circle.set_outline_thickness(log * 0.5);
+		this->light_sprite.set_scale(log / 10);
 	}
 	void apply_position() {
 		this->circle.set_center(this->position);
+		this->light_sprite.set_center(this->position);
 	}
 
 	void consider_gravity(qpl::f64 frame_time, const std::vector<point>& others, qpl::size current_index) {
@@ -104,6 +112,7 @@ struct point {
 	void draw(qsf::draw_object& draw) const {
 		draw.draw(this->lines);
 		draw.draw(this->circle);
+		draw.draw(this->light_sprite);
 	}
 };
 
@@ -136,7 +145,7 @@ struct points {
 
 				auto distance = (a_pos - b_pos).length();
 				auto length = a.circle.get_radius() + b.circle.get_radius();
-				if (distance < length / 10) {
+				if (distance < length / 4) {
 					if (a.mass > b.mass) {
 						a.mass += b.mass;
 						a.apply_radius();
@@ -169,7 +178,7 @@ struct points {
 	void update(const qsf::event_info& event) {
 
 		bool add_fade_out = false;
-		if (this->fade_out_timer.has_elapsed(this->time_factor / 120)) {
+		if (this->fade_out_timer.has_elapsed((1.0 / this->time_factor) * (1.0 / 1500))) {
 			this->fade_out_timer.reset();
 			add_fade_out = true;
 		}
@@ -196,7 +205,7 @@ struct main_state : qsf::base_state {
 			this->points.spawn_point(this->dimension());
 		}
 		this->speed_slider.set_position({ 10, 10 });
-		this->speed_slider.set_range(0.0, 2.0);
+		this->speed_slider.set_range(-5.0, 5.0, 0.0);
 		this->speed_slider.set_knob_dimension({ 20, 20 });
 
 		this->call_on_resize();
@@ -219,7 +228,7 @@ struct main_state : qsf::base_state {
 		this->update(this->speed_slider);
 
 		if (this->speed_slider.value_was_modified()) {
-			this->points.time_factor = this->speed_slider.get_value();
+			this->points.time_factor = std::pow(10.0, this->speed_slider.get_value());
 		}
 
 		this->view.allow_dragging = !(this->speed_slider.hovering_over_background || this->speed_slider.dragging);
@@ -249,6 +258,7 @@ struct main_state : qsf::base_state {
 int main() try {
 	qsf::framework framework;
 	framework.set_title("QPL");
+	framework.add_texture("light", "resources/light.png");
 	framework.set_antialiasing_level(12);
 	framework.set_dimension({ 1400u, 950u });
 
