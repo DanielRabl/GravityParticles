@@ -184,8 +184,8 @@ struct points {
 			point.update(event, this->time_factor, add_fade_out);
 		}
 
-		this->check_collision();
-		this->check_too_fast_points();
+		//this->check_collision();
+		//this->check_too_fast_points();
 	}
 	void draw(qsf::draw_object& draw) const {
 		draw.draw(this->points);
@@ -194,7 +194,7 @@ struct points {
 
 struct main_state : qsf::base_state {
 	void init() override {
-		for (qpl::size i = 0u; i < 10; ++i) {
+		for (qpl::size i = 0u; i < 2; ++i) {
 			this->points.spawn_point(this->dimension());
 		}
 		this->speed_slider.set_position({ 10, 10 });
